@@ -64,6 +64,16 @@ function App() {
     }
   };
 
+  const handleClone = async (e: FormEvent, id: number) => {
+    e.preventDefault();
+    try {
+      await axios.post(`http://localhost:8000/api/checklists/${id}/clone/`);
+      fetchChecklists();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <Router>
       <div className="container">
@@ -89,6 +99,9 @@ function App() {
           {checklists.map((cl) => (
             <div key={cl.id} style={{ border: '1px solid #ccc', padding: '1rem', marginBottom: '1rem' }}>
               <h2>{cl.title}</h2>
+              <button onClick={(e) => handleClone(e, cl.id)} style={{ marginRight: '1rem' }}>
+                Clone Checklist
+              </button>
               <p>{cl.description}</p>
               <Link to={`/checklist/${cl.id}`}>Go to Checklist</Link>
               <button onClick={(e) => handleDeleteChecklist(e, cl.id)} style={{ marginLeft: '1rem' }}>

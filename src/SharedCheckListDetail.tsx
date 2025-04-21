@@ -2,11 +2,37 @@
 import React, { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import {
+  Container,
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  TextField
+} from '@mui/material';
 
-interface UploadedFile { id: number; file: string; }
-interface Item        { id: number; name: string; files: UploadedFile[]; }
-interface Category    { id: number; name: string; items: Item[]; files: UploadedFile[]; }
-interface Checklist   { id: number; title: string; description: string; categories: Category[]; }
+interface UploadedFile {
+  id: number;
+  file: string;
+}
+interface Item {
+  id: number;
+  name: string;
+  files: UploadedFile[];
+}
+interface Category {
+  id: number;
+  name: string;
+  items: Item[];
+  files: UploadedFile[];
+}
+interface Checklist {
+  id: number;
+  title: string;
+  description: string;
+  categories: Category[];
+}
 
 export default function SharedChecklistDetail() {
   const { token } = useParams<{ token: string }>();
@@ -65,52 +91,58 @@ export default function SharedChecklistDetail() {
   if (!checklist) return <div>Loading shared checklist…</div>;
 
   return (
-    <div className="container">
-      <h2>{checklist.title}</h2>
-      <p>{checklist.description}</p>
-
+    <Container maxWidth="md">
+      <Typography variant="h4" gutterBottom>{checklist.title}</Typography>
+      <Typography variant="body1" paragraph>{checklist.description}</Typography>
+  
       {checklist.categories.map(cat => (
-        <div key={cat.id} style={{ border: "1px solid #ccc", padding: "1rem", margin: "1rem 0" }}>
-          <h3>{cat.name}</h3>
-
-          {/* existing category files */}
-          <ul>
-            {cat.files.map(f => (
-              <li key={f.id}>
-                <a href={f.file} target="_blank" rel="noreferrer">
-                  {f.file.split("/").pop()}
-                </a>
-              </li>
+        <Card key={cat.id} sx={{ mb: 3 }}>
+          <CardContent>
+            <Typography variant="h6">{cat.name}</Typography>
+  
+            <Typography variant="subtitle1" sx={{ mt: 2 }}>Category Files</Typography>
+            <ul>
+              {cat.files.map(f => (
+                <li key={f.id}>
+                  <a href={f.file} target="_blank" rel="noreferrer">
+                    {f.file.split("/").pop()}
+                  </a>
+                </li>
+              ))}
+            </ul>
+  
+            <Box component="form" onSubmit={e => uploadCatFile(e, cat.id)} sx={{ mt: 1 }}>
+              <input type="file" onChange={e => onCatFileChange(cat.id, e)} required />
+              <Button variant="outlined" size="small" type="submit" sx={{ ml: 1 }}>
+                Upload to category
+              </Button>
+            </Box>
+  
+            <Typography variant="subtitle1" sx={{ mt: 3 }}>Items</Typography>
+            {cat.items.map(item => (
+              <Box key={item.id} sx={{ mt: 2, pl: 2 }}>
+                <Typography variant="body1" fontWeight="bold">{item.name}</Typography>
+                <ul>
+                  {item.files.map(f => (
+                    <li key={f.id}>
+                      <a href={f.file} target="_blank" rel="noreferrer">
+                        {f.file.split("/").pop()}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+                <Box component="form" onSubmit={e => uploadItemFile(e, cat.id, item.id)} sx={{ mt: 1 }}>
+                  <input type="file" onChange={e => onItemFileChange(item.id, e)} required />
+                  <Button variant="outlined" size="small" type="submit" sx={{ ml: 1 }}>
+                    Upload to item
+                  </Button>
+                </Box>
+              </Box>
             ))}
-          </ul>
-
-          {/* upload into this category */}
-          <form onSubmit={e => uploadCatFile(e, cat.id)}>
-            <input type="file" onChange={e => onCatFileChange(cat.id, e)} required />
-            <button type="submit">Upload to category</button>
-          </form>
-
-          {/* items */}
-          {cat.items.map(item => (
-            <div key={item.id} style={{ marginTop: "0.5rem" }}>
-              <strong>{item.name}</strong>
-              <ul>
-                {item.files.map(f => (
-                  <li key={f.id}>
-                    <a href={f.file} target="_blank" rel="noreferrer">
-                      {f.file.split("/").pop()}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-              <form onSubmit={e => uploadItemFile(e, cat.id, item.id)}>
-                <input type="file" onChange={e => onItemFileChange(item.id, e)} required />
-                <button type="submit">Upload to item</button>
-              </form>
-            </div>
-          ))}
-        </div>
+          </CardContent>
+        </Card>
       ))}
-    </div>
+    </Container>
   );
+  
 }

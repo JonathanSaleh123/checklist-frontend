@@ -1,4 +1,4 @@
-# Checklsit App Frontend Repository
+# Checklist App Frontend Repository
 
 Built with **React**, **TypeScript**/**JavaScript**, **Material UI**, and **Auth0** for authentication.
 

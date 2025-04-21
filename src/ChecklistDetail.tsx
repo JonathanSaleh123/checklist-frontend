@@ -1,6 +1,7 @@
 import React, { useState, useEffect, FormEvent, ChangeEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth0 } from '@auth0/auth0-react';
 
 // Define types for the checklist, category, and item
 
@@ -43,21 +44,30 @@ function ChecklistDetail() {
     fetchChecklist();
   }, [checklistId]);
 
+  const { getAccessTokenSilently } = useAuth0();
   const fetchChecklist = async () => {
     try {
-      const res = await axios.get<Checklist>(`http://localhost:8000/api/checklists/${checklistId}/`);
+      const token = await getAccessTokenSilently();
+      const res = await axios.get<Checklist>(
+        `http://localhost:8000/api/checklists/${checklistId}/`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setChecklist(res.data);
     } catch (err) {
       console.error(err);
     }
   };
-
+  
   const handleCategorySubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (checklist) {
       try {
-        // Post request with checklistId to add category
-        await axios.post(`http://localhost:8000/api/checklists/${checklistId}/categories/`, { name: categoryName });
+        const token = await getAccessTokenSilently();
+        await axios.post(
+          `http://localhost:8000/api/checklists/${checklistId}/categories/`,
+          { name: categoryName },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
         setCategoryName('');
         fetchChecklist();
       } catch (err) {
@@ -65,13 +75,17 @@ function ChecklistDetail() {
       }
     }
   };
-
+  
   const handleItemSubmit = async (e: FormEvent, categoryId: number) => {
     e.preventDefault();
     if (checklist) {
       try {
-        // Post request with checklistId and categoryId to add item
-        await axios.post(`http://localhost:8000/api/checklists/${checklistId}/categories/${categoryId}/items/`, { name: itemName });
+        const token = await getAccessTokenSilently();
+        await axios.post(
+          `http://localhost:8000/api/checklists/${checklistId}/categories/${categoryId}/items/`,
+          { name: itemName },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
         setItemName('');
         fetchChecklist();
       } catch (err) {
@@ -79,66 +93,120 @@ function ChecklistDetail() {
       }
     }
   };
-
-
+  
   const handleDeleteCategory = async (categoryId: number) => {
     if (checklist) {
       try {
-        // Delete request with checklistId and categoryId
-        await axios.delete(`http://localhost:8000/api/checklists/${checklistId}/categories/${categoryId}/`);
+        const token = await getAccessTokenSilently();
+        await axios.delete(
+          `http://localhost:8000/api/checklists/${checklistId}/categories/${categoryId}/`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
         fetchChecklist();
       } catch (err) {
         console.error(err);
       }
     }
   };
-
+  
   const handleDeleteItem = async (categoryId: number, itemId: number) => {
     if (!checklist) return;
     try {
+      const token = await getAccessTokenSilently();
       await axios.delete(
-        `http://localhost:8000/api/checklists/${checklist.id}/categories/${categoryId}/items/${itemId}/`
+        `http://localhost:8000/api/checklists/${checklist.id}/categories/${categoryId}/items/${itemId}/`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       fetchChecklist();
     } catch (err) {
       console.error(err);
     }
   };
-
-
-  const onCategoryFileChange = (catId: number, e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) {
-      setCategoryFileMap(prev => ({ ...prev, [catId]: e.target.files?.[0] || null }));
-    }
-  };
-
+  
   const handleCategoryFileUpload = async (e: FormEvent, catId: number) => {
     e.preventDefault();
     const file = categoryFileMap[catId];
     if (!file) return;
     const formData = new FormData();
     formData.append('file', file);
-
-    await axios.post(
-      `http://localhost:8000/api/checklists/${checklistId}/categories/${catId}/files/`,
-      formData,
-      { headers: { 'Content-Type': 'multipart/form-data' } }
-    );
-    setCategoryFileMap(prev => ({ ...prev, [catId]: null }));
-    fetchChecklist();
+    try {
+      const token = await getAccessTokenSilently();
+      await axios.post(
+        `http://localhost:8000/api/checklists/${checklistId}/categories/${catId}/files/`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setCategoryFileMap(prev => ({ ...prev, [catId]: null }));
+      fetchChecklist();
+    } catch (err) {
+      console.error(err);
+    }
   };
+  
   const handleDeleteCategoryFile = async (catId: number, fileId: number) => {
     if (!checklist) return;
     try {
+      const token = await getAccessTokenSilently();
       await axios.delete(
-        `http://localhost:8000/api/checklists/${checklist.id}/categories/${catId}/files/${fileId}/`
+        `http://localhost:8000/api/checklists/${checklist.id}/categories/${catId}/files/${fileId}/`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       fetchChecklist();
     } catch (err) {
       console.error(err);
     }
   };
+  
+  const handleItemFileUpload = async (e: FormEvent, catId: number, itemId: number) => {
+    e.preventDefault();
+    const file = itemFileMap[itemId];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const token = await getAccessTokenSilently();
+      await axios.post(
+        `http://localhost:8000/api/checklists/${checklistId}/categories/${catId}/items/${itemId}/files/`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setItemFileMap(prev => ({ ...prev, [itemId]: null }));
+      fetchChecklist();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+  
+  const handleDeleteItemFile = async (catId: number, itemId: number, fileId: number) => {
+    if (!checklist) return;
+    try {
+      const token = await getAccessTokenSilently();
+      await axios.delete(
+        `http://localhost:8000/api/checklists/${checklist.id}/categories/${catId}/items/${itemId}/files/${fileId}/`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      fetchChecklist();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+  
 
+  const onCategoryFileChange = (catId: number, e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) {
+      setCategoryFileMap(prev => ({ ...prev, [catId]: e.target.files?.[0] || null }));
+    }
+  };
   // likewise for items:
   const onItemFileChange = (itemId: number, e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
@@ -146,33 +214,8 @@ function ChecklistDetail() {
     }
   };
 
-  const handleItemFileUpload = async (e: FormEvent, catId: number, itemId: number) => {
-    e.preventDefault();
-    const file = itemFileMap[itemId];
-    if (!file) return;
-    const formData = new FormData();
-    formData.append('file', file);
 
-    await axios.post(
-      `http://localhost:8000/api/checklists/${checklistId}/categories/${catId}/items/${itemId}/files/`,
-      formData,
-      { headers: { 'Content-Type': 'multipart/form-data' } }
-    );
-    setItemFileMap(prev => ({ ...prev, [itemId]: null }));
-    fetchChecklist();
-  };
 
-  const handleDeleteItemFile = async (catId: number, itemId: number, fileId: number) => {
-    if (!checklist) return;
-    try {
-      await axios.delete(
-        `http://localhost:8000/api/checklists/${checklist.id}/categories/${catId}/items/${itemId}/files/${fileId}/`
-      );
-      fetchChecklist();
-    } catch (err) {
-      console.error(err);
-    }
-  };
   if (!checklist) return <div>Loading...</div>;
 
   

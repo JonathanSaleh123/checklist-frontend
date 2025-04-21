@@ -4,7 +4,7 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { Auth0Provider } from '@auth0/auth0-react';
-
+import { BrowserRouter } from 'react-router-dom';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -18,8 +18,10 @@ root.render(
       scope: process.env.REACT_APP_AUTH0_SCOPE || 'openid profile email',
       prompt: 'consent' 
     }}
-  >
-    <App />
+  > 
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
   </Auth0Provider>
   // </React.StrictMode>
 );

@@ -13,10 +13,14 @@ export default function SharedChecklistDetail() {
   const [checklist, setChecklist] = useState<Checklist | null>(null);
   const [catFileMap, setCatFileMap]     = useState<Record<number, File|null>>({});
   const [itemFileMap, setItemFileMap]   = useState<Record<number, File|null>>({});
+  const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
-    axios.get<Checklist>(`http://localhost:8000/api/share/${token}/`)
-      .then(res => setChecklist(res.data))
+    axios.get(`http://localhost:8000/api/share/${token}/`)
+      .then(res => {
+        setChecklist(res.data);
+        setIsOwner(res.data.is_owner);
+      })
       .catch(console.error);
   }, [token]);
 
@@ -49,9 +53,7 @@ export default function SharedChecklistDetail() {
     if (!file) return;
     const fd = new FormData();
     fd.append("file", file);
-    axios.post(`http://localhost:8000/api/share/${token}/categories/${catId}/items/${itemId}/files/`, fd, {
-      headers: { "Content‑Type": "multipart/form-data" }
-    })
+    axios.post(`http://localhost:8000/api/share/${token}/categories/${catId}/items/${itemId}/files/`, fd)
     .then(() => {
       setItemFileMap(m => ({ ...m, [itemId]: null }));
       return axios.get<Checklist>(`/api/share/${token}/`);

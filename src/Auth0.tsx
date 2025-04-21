@@ -16,15 +16,4 @@ export const LogoutButton = () => {
         Log Out
       </button>
     );
-  };
-
-  {/* 
-        {!isAuthenticated && !isLoading && <LoginButton />}
-
-        {isAuthenticated && !isLoading && (
-          <div style={{ marginBottom: '1rem' }}>
-            <p>Welcome, {user?.name}!</p>
-            <img src={user?.picture} alt="User Avatar" style={{ width: '50px', borderRadius: '50%' }} />
-            <LogoutButton />
-          </div>
-        )} */}
+};
